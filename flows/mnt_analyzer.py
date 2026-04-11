@@ -64,14 +64,20 @@ def analyze_tiff(file_path: str, band_index: int = 1):
     plt.close()
 
     print(f"\nSaved figure: {output_file}")
+
+    #save metadata
     meta_file = onecode.file_output(
-        key="output_image",
+        key="metadata",
         value="model/metadata.txt",
+        tags=['TXT'],
         make_path=True
     )
-    #save metadata
+    data_to_save=""
+    for key, value in info.items():
+        data_to_save = data_to_save + f"{key}:{value}\n"
     with open(meta_file, 'w') as f:
-        f.write(info)
+        f.write(data_to_save)
+        print(f"\nSaved figure: {meta_file}")
 
 
 def run():
