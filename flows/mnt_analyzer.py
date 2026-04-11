@@ -1,42 +1,48 @@
-# Entry point for OneCode
-import onecode
-
 # -*- coding: utf-8 -*-
 
 """
 APP: TIFF Analyzer (OneCode version)
 Author: Abraham TERI
 """
-
-from osgeo import gdal
+import onecode
+import rasterio
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 
 def analyze_tiff(file_path: str, band_index: int = 1):
-    """Load TIFF, display metadata, and save visualization."""
+    """
+    Analyse un fichier TIFF :
+    - métadonnées
+    - extraction bande
+    - histogramme + image
+    """
 
-    dataset = gdal.Open(file_path)
+    with rasterio.open(file_path) as src:
 
-    if not dataset:
-        raise Exception("Unable to load the TIFF file")
+        # ===== Metadata =====
+        info = {
+            "width": src.width,
+            "height": src.height,
+            "bands": src.count,
+            "crs": str(src.crs),
+            "transform": str(src.transform),
+            "driver": src.driver,
+        }
 
-    # ===== Metadata =====
-    info = {
-        "width": dataset.RasterXSize,
-        "height": dataset.RasterYSize,
-        "bands": dataset.RasterCount,
-        "projection": dataset.GetProjection(),
-        "pixel_size": dataset.GetGeoTransform()[1],
-    }
+        print("=== TIFF METADATA ===")
+        for k, v in info.items():
+            print(f"{k}: {v}")
 
-    print("=== TIFF METADATA ===")
-    for k, v in info.items():
-        print(f"{k}: {v}")
+        # ===== Lecture bande =====
+        if band_index < 1 or band_index > src.count:
+            raise ValueError(f"Band index must be between 1 and {src.count}")
 
-    # ===== Read band =====
-    band = dataset.GetRasterBand(band_index)
-    array = band.ReadAsArray()
+        band = src.read(band_index)
+
+    # ===== Conversion numpy =====
+    array = np.array(band)
 
     # ===== Plot =====
     plt.figure(figsize=(10, 5))
@@ -52,7 +58,6 @@ def analyze_tiff(file_path: str, band_index: int = 1):
     plt.hist(array.flatten(), bins=50)
     plt.title("Histogram")
 
-    # Save result
     output_file = onecode.file_output(
         key="output_image",
         value="model/ouput.png",
@@ -61,11 +66,11 @@ def analyze_tiff(file_path: str, band_index: int = 1):
     plt.savefig(output_file)
     plt.close()
 
-    print(f"\nImage saved as: {output_file}")
+    print(f"\nSaved figure: {output_file}")
 
     return {
         "metadata": info,
-        "output_image": output_file,
+        "output_image": output_file
     }
 
 
