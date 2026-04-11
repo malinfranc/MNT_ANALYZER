@@ -13,10 +13,10 @@ import numpy as np
 
 def analyze_tiff(file_path: str, band_index: int = 1):
     """
-    Analyse un fichier TIFF :
-    - métadonnées
-    - extraction bande
-    - histogramme + image
+    Analyze TIFF file :
+    - metadata
+    - band extraction
+    - histogram + image
     """
 
     with rasterio.open(file_path) as src:
@@ -31,17 +31,14 @@ def analyze_tiff(file_path: str, band_index: int = 1):
             "driver": src.driver,
         }
 
-        print("=== TIFF METADATA ===")
-        for k, v in info.items():
-            print(f"{k}: {v}")
 
-        # ===== Lecture bande =====
+        # ===== Band reading =====
         if band_index < 1 or band_index > src.count:
             raise ValueError(f"Band index must be between 1 and {src.count}")
 
         band = src.read(band_index)
 
-    # ===== Conversion numpy =====
+    # ===== Conversion to numpy array =====
     array = np.array(band)
 
     # ===== Plot =====
@@ -61,17 +58,20 @@ def analyze_tiff(file_path: str, band_index: int = 1):
     output_file = onecode.file_output(
         key="output_image",
         value="model/ouput.png",
-        make_path=True  # will create the model folder if doesn't exist
+        make_path=True
     )
     plt.savefig(output_file)
     plt.close()
 
     print(f"\nSaved figure: {output_file}")
-
-    return {
-        "metadata": info,
-        "output_image": output_file
-    }
+    meta_file = onecode.file_output(
+        key="output_image",
+        value="model/metadata.txt",
+        make_path=True
+    )
+    #save metadata
+    with open(meta_file, 'w') as f:
+        f.write(info)
 
 
 def run():
@@ -79,21 +79,22 @@ def run():
     OneCode entry point
     """
 
-    #Exemple : adapter selon input OneCode
+    #Input TIFF file
     file_path = onecode.file_input(
-        key="FileInput",
+        key="TIFF_File_Input",
         value="C:/Users/HP/Desktop/mnt_analyzer/2025-07-25-00_Sentinel-2_L2A_B4B3B2B8.tiff"
-        )  # fichier uploadé
+        )
 
+    #Input Band index
     band_index = onecode.number_input(
-        key="magic_number",
+        key="Index_Number",
         value=1,
-        label="Choose a magic number",
+        label="Enter band index",
         min=0,
         max=None,
-        step=2
+        step=1
     )
 
-    result = analyze_tiff(file_path, band_index)
+    analyze_tiff(file_path, band_index)
 
-    onecode.Logger.info(result)
+    onecode.Logger.info("Finished !")
