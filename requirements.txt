@@ -1,2 +1,4 @@
 onecode>=1,<2
 rasterio
+matplotlib
+numpy
