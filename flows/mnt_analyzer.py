@@ -8,7 +8,7 @@ APP: TIFF Analyzer (OneCode version)
 Author: Abraham TERI
 """
 
-#from osgeo import gdal
+from osgeo import gdal
 import matplotlib.pyplot as plt
 
 
@@ -53,7 +53,11 @@ def analyze_tiff(file_path: str, band_index: int = 1):
     plt.title("Histogram")
 
     # Save result
-    output_file = "output.png"
+    output_file = onecode.file_output(
+        key="output_image",
+        value="model/ouput.png",
+        make_path=True  # will create the model folder if doesn't exist
+    )
     plt.savefig(output_file)
     plt.close()
 
@@ -71,9 +75,20 @@ def run():
     """
 
     #Exemple : adapter selon input OneCode
-    file_path = onecode.file_input(key="FileInput",value="C:/Users/HP/Desktop/mnt_analyzer/2025-07-25-00_Sentinel-2_L2A_B4B3B2B8.tiff", types=("MNT",".tiff"))  # fichier uploadé
-    onecode.Logger.warning(file_path)
+    file_path = onecode.file_input(
+        key="FileInput",
+        value="C:/Users/HP/Desktop/mnt_analyzer/2025-07-25-00_Sentinel-2_L2A_B4B3B2B8.tiff"
+        )  # fichier uploadé
 
-    #result = analyze_tiff(file_path, band_index)
+    band_index = onecode.number_input(
+        key="magic_number",
+        value=1,
+        label="Choose a magic number",
+        min=0,
+        max=None,
+        step=2
+    )
 
-    #return result
+    result = analyze_tiff(file_path, band_index)
+
+    onecode.Logger.info(result)
